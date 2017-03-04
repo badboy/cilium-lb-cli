@@ -1,3 +1,4 @@
+use std::os::unix::io::RawFd;
 use std::default::Default;
 use std::convert::From;
 use std::fmt::{self, Display};
@@ -21,6 +22,7 @@ pub enum MapType {
 
 #[derive(Debug)]
 pub struct Map {
+    pub fd: RawFd,
     pub map_type: MapType,
     pub key_size: usize,
     pub value_size: usize,
@@ -54,6 +56,7 @@ impl From<u8> for MapType {
 impl Default for Map {
     fn default() -> Map {
         Map {
+            fd: 0,
             map_type: MapType::Unspec,
             key_size: 0,
             value_size: 0,

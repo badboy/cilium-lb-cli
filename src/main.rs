@@ -36,6 +36,7 @@ fn bpf_get_map(pathname: &str) -> io::Result<Map> {
     infofile.read_to_string(&mut buf)?;
 
     let mut m = Map::default();
+    m.fd = fd;
 
     for line in buf.lines() {
         let vals = line.split('\t').collect::<Vec<_>>();
