@@ -2,6 +2,14 @@ use std::os::unix::io::RawFd;
 use std::default::Default;
 use std::convert::From;
 use std::fmt::{self, Display};
+use std::fs::File;
+use std::io;
+use std::io::prelude::*;
+use std::iter::Iterator;
+use std::iter::IntoIterator;
+use std::ptr;
+
+use bpf;
 
 #[derive(Debug)]
 #[repr(u8)]
@@ -72,5 +80,42 @@ impl Display for Map {
         write!(f, "Key size:      {:?}\n", self.key_size)?;
         write!(f, "Value size:    {:?}\n", self.value_size)?;
         write!(f, "Max entries:   {:?}", self.max_entries)
+    }
+}
+
+impl Map {
+    pub fn from_path(pathname: &str) -> io::Result<Map> {
+        let fd = bpf::obj_get_fd(pathname);
+        if fd < 0 {
+            return Err(io::Error::last_os_error());
+        }
+
+        let fdinfo = format!("/proc/self/fdinfo/{}", fd);
+        let mut infofile = File::open(fdinfo)?;
+
+        let mut buf = String::new();
+        infofile.read_to_string(&mut buf)?;
+
+        let mut m = Map::default();
+        m.fd = fd;
+
+        for line in buf.lines() {
+            let vals = line.split('\t').collect::<Vec<_>>();
+            assert_eq!(2, vals.len());
+
+            let key = &vals[0];
+            let val = &vals[1];
+
+            match *key {
+                "map_type:" => m.map_type = val.parse::<u8>().map(|v| MapType::from(v)).unwrap(),
+                "key_size:" => m.key_size = val.parse::<usize>().unwrap(),
+                "value_size:" => m.value_size = val.parse::<usize>().unwrap(),
+                "max_entries:" => m.max_entries = val.parse::<usize>().unwrap(),
+                "map_flags:" => m.map_flags = usize::from_str_radix(&val[2..], 16).unwrap(),
+                _ => {}
+            }
+        }
+
+        Ok(m)
     }
 }
