@@ -38,6 +38,11 @@ pub struct Map {
     pub map_flags: usize,
 }
 
+pub struct MapIterator<'a> {
+    map: &'a Map,
+    key: Vec<u8>,
+}
+
 impl From<u8> for MapType {
     fn from(val: u8) -> MapType {
         use self::MapType::*;
@@ -117,5 +122,39 @@ impl Map {
         }
 
         Ok(m)
+    }
+}
+
+impl<'a> IntoIterator for &'a Map {
+    type Item = (Vec<u8>, Vec<u8>);
+    type IntoIter = MapIterator<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let key = vec![0; self.key_size];
+        MapIterator {
+            map: self,
+            key: key,
+        }
+    }
+}
+
+impl<'a> Iterator for MapIterator<'a> {
+    type Item = (Vec<u8>, Vec<u8>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let next_key = match bpf::get_next_key(&self.map, &self.key) {
+            Ok(key) => key,
+            Err(_) => return None,
+        };
+        let value = match bpf::lookup_elem(&self.map, &next_key) {
+            Ok(val) => val,
+            Err(_) => return None,
+        };
+
+        unsafe {
+            ptr::copy_nonoverlapping(next_key.as_ptr(), self.key.as_mut_ptr(), self.map.key_size);
+        }
+
+        Some((next_key, value))
     }
 }
