@@ -3,7 +3,7 @@
 #include <linux/bpf.h>
 #include <sys/syscall.h>
 #include <unistd.h>
-#include <strings.h>
+#include <string.h>
 
 static __u64 ptr_to_u64(const void *ptr)
 {
