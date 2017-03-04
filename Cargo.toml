@@ -1,0 +1,11 @@
+[package]
+name = "bpf-map"
+version = "0.1.0"
+authors = ["Jan-Erik Rediger <janerik@fnordig.de>"]
+
+build = "build.rs"
+
+[dependencies]
+
+[build-dependencies]
+gcc = "0.3"
