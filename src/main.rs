@@ -13,6 +13,8 @@ use map::{Map, MapType};
 
 extern {
     fn obj_get(pathname: *const c_char) -> c_int;
+    fn bpf_lookup_elem(fd: c_int, key: *const u8, value: *mut u8) -> c_int;
+    fn bpf_get_next_key(fd: c_int, key: *const u8, next_key: *mut u8) -> c_int;
 }
 
 fn bpf_obj_get_fd(pathname: &str) -> RawFd {
