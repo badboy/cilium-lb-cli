@@ -1,14 +1,12 @@
 extern crate clap;
 #[macro_use]
 extern crate error_chain;
+extern crate bpf_map;
 
 use std::io::Write;
 use clap::{Arg, ArgMatches, App, AppSettings, SubCommand};
 
-mod map;
-mod bpf;
-
-use map::Map;
+use bpf_map::Map;
 
 error_chain! {
     foreign_links {

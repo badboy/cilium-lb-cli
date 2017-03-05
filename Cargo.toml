@@ -5,6 +5,10 @@ authors = ["Jan-Erik Rediger <janerik@fnordig.de>"]
 
 build = "build.rs"
 
+[[bin]]
+doc = false
+name = "bpf-map"
+
 [dependencies]
 clap = "2.20.5"
 error-chain = "0.10.0"
