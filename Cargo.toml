@@ -2,8 +2,24 @@
 name = "bpf-map"
 version = "0.1.0"
 authors = ["Jan-Erik Rediger <janerik@fnordig.de>"]
+description = "Inspect persisted BPF maps"
+
+repository = "https://github.com/badboy/bpf-map"
+homepage = "https://github.com/badboy/bpf-map"
+documentation = "https://docs.rs/bpf-map"
+
+license = "MIT"
 
 build = "build.rs"
+
+include = [
+  "README.md",
+  "LICENSE",
+  "Cargo.toml",
+  "src/**/*",
+  "benches/**/*",
+  "examples/**/*"
+]
 
 [[bin]]
 doc = false
