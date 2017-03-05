@@ -43,7 +43,7 @@ fn main() {
         .subcommand(SubCommand::with_name("info")
                     .about("Print metadata information of map")
                     .arg(Arg::with_name("MAP_PATH").required(true)
-                         .help("name of the fuzz target")));
+                         .help("Path to the map")));
 
     let args = app.get_matches();
 
