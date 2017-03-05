@@ -11,6 +11,11 @@ extern {
     fn bpf_get_next_key(fd: c_int, key: *const u8, next_key: *mut u8) -> c_int;
 }
 
+/// Lookup an element from the map
+///
+/// ## Panics
+///
+/// Panics if the map is invalid or the passed key is not of the expected length.
 pub fn lookup_elem(map: &Map, key: &[u8]) -> io::Result<Vec<u8>> {
     assert!(map.fd > 0);
     assert_eq!(map.key_size, key.len());
@@ -28,6 +33,11 @@ pub fn lookup_elem(map: &Map, key: &[u8]) -> io::Result<Vec<u8>> {
     }
 }
 
+/// Iterate to the next key from a given one in a map
+///
+/// ## Panics
+///
+/// Panics if the map is invalid or the passed key is not of the expected length.
 pub fn get_next_key(map: &Map, old_key: &[u8]) -> io::Result<Vec<u8>> {
     assert!(map.fd > 0);
     assert_eq!(map.key_size, old_key.len());
@@ -45,6 +55,7 @@ pub fn get_next_key(map: &Map, old_key: &[u8]) -> io::Result<Vec<u8>> {
     }
 }
 
+/// Get a file descriptor from a path to a persisted BPF map
 pub fn obj_get_fd(pathname: &str) -> RawFd {
     let cstr = CString::new(pathname).unwrap();
 

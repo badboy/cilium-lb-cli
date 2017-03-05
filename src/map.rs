@@ -11,6 +11,11 @@ use std::ptr;
 
 use bpf;
 
+/// Possible types for BPF maps.
+///
+/// This must be kept in sync with map types available in the kernel.
+///
+/// Certain map types do not expose functionality to lookup elements or iterate through keys.
 #[derive(Debug)]
 #[repr(u8)]
 pub enum MapType {
@@ -28,13 +33,20 @@ pub enum MapType {
     LPMTrie,
 }
 
+/// A Map represents metainformation about a BPF map
 #[derive(Debug)]
 pub struct Map {
+    /// The file descriptor of the map
     pub fd: RawFd,
+    /// Type of the map
     pub map_type: MapType,
+    /// Size of keys in the map, in bytes
     pub key_size: usize,
+    /// Size of values in the map, in bytes
     pub value_size: usize,
+    /// The maximum number of entries this map can hold
     pub max_entries: usize,
+    /// Additional flags set at creation
     pub map_flags: usize,
 }
 
@@ -89,6 +101,9 @@ impl Display for Map {
 }
 
 impl Map {
+    /// Load map information from a path to a persisted BPF map
+    ///
+    /// Returns an IO error if anything goes wrong.
     pub fn from_path(pathname: &str) -> io::Result<Map> {
         let fd = bpf::obj_get_fd(pathname);
         if fd < 0 {
