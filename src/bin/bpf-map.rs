@@ -36,7 +36,6 @@ fn hex_print(data: &[u8]) {
         }
         let fillup = 16-row.len();
         for _ in 0..(fillup*3) { print!(" "); }
-        if fillup > 0 { print!(" "); }
 
         print!(" |");
         for &c in row {
