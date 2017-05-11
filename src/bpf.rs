@@ -1,5 +1,5 @@
 use std::os::unix::io::RawFd;
-use std::os::raw::{c_char, c_int};
+use std::os::raw::{c_char, c_int, c_ulonglong};
 use std::ffi::CString;
 use std::io;
 
@@ -9,6 +9,8 @@ extern {
     fn obj_get(pathname: *const c_char) -> c_int;
     fn bpf_lookup_elem(fd: c_int, key: *const u8, value: *mut u8) -> c_int;
     fn bpf_get_next_key(fd: c_int, key: *const u8, next_key: *mut u8) -> c_int;
+    fn bpf_delete_elem(fd: c_int, key: *const u8) -> c_int;
+    fn bpf_update_elem(fd: c_int, key: *const u8, value: *const u8, flags: c_ulonglong) -> c_int;
 }
 
 /// Lookup an element from the map
@@ -30,6 +32,35 @@ pub fn lookup_elem(map: &Map, key: &[u8]) -> io::Result<Vec<u8>> {
 
         value.set_len(map.value_size);
         Ok(value)
+    }
+}
+
+pub fn update_elem(map: &Map, key: &[u8], value: &[u8]) -> io::Result<()> {
+    assert!(map.fd > 0);
+    assert_eq!(map.key_size, key.len());
+    assert_eq!(map.value_size, value.len());
+
+    unsafe {
+        let res = bpf_update_elem(map.fd, key.as_ptr(), value.as_ptr(), 0);
+        if res < 0 {
+            return Err(io::Error::last_os_error());
+        }
+
+        Ok(())
+    }
+}
+
+pub fn delete_elem(map: &Map, key: &[u8]) -> io::Result<()> {
+    assert!(map.fd > 0);
+    assert_eq!(map.key_size, key.len());
+
+    unsafe {
+        let res = bpf_delete_elem(map.fd, key.as_ptr());
+        if res < 0 {
+            return Err(io::Error::last_os_error());
+        }
+
+        Ok(())
     }
 }
 

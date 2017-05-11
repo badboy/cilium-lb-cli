@@ -9,5 +9,6 @@
 
 pub mod bpf;
 mod map;
+pub mod service;
 
 pub use map::{Map, MapType};

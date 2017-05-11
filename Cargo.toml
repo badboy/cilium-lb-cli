@@ -1,5 +1,5 @@
 [package]
-name = "bpf-map"
+name = "cilium-lb"
 version = "0.1.0"
 authors = ["Jan-Erik Rediger <janerik@fnordig.de>"]
 description = "Inspect persisted BPF maps"
@@ -23,7 +23,7 @@ include = [
 
 [[bin]]
 doc = false
-name = "bpf-map"
+name = "cilium-lb"
 
 [dependencies]
 clap = "2.20.5"
