@@ -91,27 +91,6 @@ int bpf_get_next_key(int fd, void *key, void *next_key)
 	return syscall(__NR_bpf, BPF_MAP_GET_NEXT_KEY, &attr, sizeof(attr));
 }
 
-int set_service(int fd,
-		int daddr, int port, int slave,
-		int target, int dport, int count)
-{
-	struct lb4_key key = {
-		/*.address =*/ __bswap_32(daddr),
-		/*.dport =*/ port,
-		/*.slave =*/ slave,
-	};
-
-	struct lb4_service svc = {
-		/*.target =*/ __bswap_32(target),
-		/*.port   =*/ dport,
-		/*.count  =*/ count,
-		/*.rev_nat_index =*/ 0,
-		/*.weight =*/ 0,
-	};
-
-	return bpf_update_elem(fd, &key, &svc, 0);
-}
-
 void free_packed(void *in)
 {
 	free(in);
@@ -128,6 +107,21 @@ struct lb4_key *to_packed_key(const struct lb4_key_unpacked *in)
 
 	return key;
 }
+
+struct lb4_service *to_packed_svc(const struct lb4_service_unpacked *in)
+{
+	struct lb4_service *svc = malloc(sizeof(*svc));
+	if (!svc) return NULL;
+
+	svc->target = __bswap_32(in->target);
+	svc->port = in->port;
+	svc->count = in->count;
+	svc->rev_nat_index = in->rev_nat_index;
+	svc->weight = in->weight;
+
+	return svc;
+}
+
 void from_packed_key(const struct lb4_key *in, struct lb4_key_unpacked *out)
 {
 	out->address = __bswap_32(in->address);

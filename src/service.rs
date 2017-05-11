@@ -91,6 +91,16 @@ impl Backend {
         }
     }
 
+    pub fn empty() -> Backend {
+        Backend {
+            target: 0,
+            port: 0,
+            count: 0,
+            rev_nat_index: 0,
+            weight: 0,
+        }
+    }
+
     pub fn count(&mut self, count: u16) {
         self.count = count;
     }
