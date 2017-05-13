@@ -7,7 +7,6 @@ use std::io::Write;
 use std::collections::HashMap;
 use std::net::SocketAddrV4;
 use std::str::FromStr;
-use std::slice;
 use clap::{Arg, ArgMatches, App, AppSettings, SubCommand};
 
 use cilium_lb::{bpf, service, Map};
@@ -94,13 +93,9 @@ fn del<'a>(args: &ArgMatches<'a>) -> Result<()> {
         println!("Deleting service {} slave {}", service_addr, id);
         frontend.slave(id);
 
-        unsafe {
-            let raw = frontend.to_packed();
-            let raw_slice = slice::from_raw_parts(raw, map.key_size);
-            let res = bpf::delete_elem(&map, raw_slice);
-            service::free_packed(raw);
-            res?;
-        }
+        let raw = frontend.to_bytes();
+        let res = bpf::delete_elem(&map, raw);
+        res?;
     }
 
     Ok(())
@@ -147,33 +142,24 @@ fn add<'a>(args: &ArgMatches<'a>) -> Result<()> {
     let mut frontend = service::Frontend::new(service_addr);
     let empty = service::Backend::empty();
     let backend = service::Backend::new(backend_addr, 1);
-    unsafe {
-        {
-            frontend.slave(0);
-            let raw_fe = frontend.to_packed();
-            let raw_fe_slice = slice::from_raw_parts(raw_fe, map.key_size);
-            let raw_be = empty.to_packed();
-            let raw_be_slice = slice::from_raw_parts(raw_be, map.value_size);
 
-            let res = bpf::update_elem(&map, raw_fe_slice, raw_be_slice);
-            service::free_packed(raw_fe);
-            service::free_packed(raw_be);
-            res?;
-        }
+    {
+        frontend.slave(0);
+        let raw_fe = frontend.to_bytes();
+        let raw_be = empty.to_bytes();
 
-        {
-            frontend.slave(next_id);
-            println!("Adding backend {} slave {} for frontend {}", backend_addr, next_id, service_addr);
-            let raw_fe = frontend.to_packed();
-            let raw_fe_slice = slice::from_raw_parts(raw_fe, map.key_size);
-            let raw_be = backend.to_packed();
-            let raw_be_slice = slice::from_raw_parts(raw_be, map.value_size);
+        let res = bpf::update_elem(&map, raw_fe, raw_be);
+        res?;
+    }
 
-            let res = bpf::update_elem(&map, raw_fe_slice, raw_be_slice);
-            service::free_packed(raw_fe);
-            service::free_packed(raw_be);
-            res?;
-        }
+    {
+        frontend.slave(next_id);
+        println!("Adding backend {} slave {} for frontend {}", backend_addr, next_id, service_addr);
+        let raw_fe = frontend.to_bytes();
+        let raw_be = backend.to_bytes();
+
+        let res = bpf::update_elem(&map, raw_fe, raw_be);
+        res?;
     }
 
     Ok(())

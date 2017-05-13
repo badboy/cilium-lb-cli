@@ -1,36 +1,24 @@
+use std::{mem, ptr, slice};
 use std::net::SocketAddrV4;
 
-extern {
-    #[link_name = "free_packed"]
-    fn _free_packed(ptr: *const u8);
-    fn to_packed_key(ptr: *const Frontend) -> *mut u8;
-    fn to_packed_svc(ptr: *const Backend) -> *mut u8;
-
-    fn from_packed_key(ptr: *const u8, key: *mut Frontend);
-    fn from_packed_svc(ptr: *const u8, svc: *mut Backend);
-}
-
+/// struct lb4_key
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
-#[repr(C)]
+#[repr(C,packed)]
 pub struct Frontend {
     pub address: u32,
     pub dport: u16,
     pub slave: u16,
 }
 
+/// struct lb4_service
 #[derive(Clone, Debug)]
-#[repr(C)]
+#[repr(C,packed)]
 pub struct Backend {
     pub target: u32,
     pub port: u16,
     pub count: u16,
     pub rev_nat_index: u16,
     pub weight: u16,
-}
-pub fn free_packed(ptr: *const u8) {
-    unsafe {
-        _free_packed(ptr);
-    }
 }
 
 impl Frontend {
@@ -58,16 +46,21 @@ impl Frontend {
         SocketAddrV4::new(self.address.into(), self.dport)
     }
 
-    pub fn to_packed(&self) -> *const u8 {
+    pub fn to_bytes(&self) -> &[u8] {
         unsafe {
-            to_packed_key(self as *const _)
+            slice::from_raw_parts(self as *const _ as *const u8,
+                                  mem::size_of::<Frontend>())
         }
     }
 
     pub unsafe fn from_packed(data: &[u8]) -> Frontend {
-        let mut front = Frontend { address: 0, dport: 0, slave: 0 };
+        assert!(data.len() == mem::size_of::<Frontend>());
 
-        from_packed_key(data.as_ptr(), &mut front as *mut _);
+        let mut front = Frontend { address: 0, dport: 0, slave: 0 };
+        ptr::copy_nonoverlapping(data.as_ptr(),
+                                 &mut front as *mut _ as *mut u8,
+                                 mem::size_of::<Frontend>());
+
         front
     }
 }
@@ -109,16 +102,21 @@ impl Backend {
         SocketAddrV4::new(self.target.into(), self.port)
     }
 
-    pub fn to_packed(&self) -> *const u8 {
+    pub fn to_bytes(&self) -> &[u8] {
         unsafe {
-            to_packed_svc(self as *const _)
+            slice::from_raw_parts(self as *const _ as *const u8,
+                                  mem::size_of::<Backend>())
         }
     }
 
     pub unsafe fn from_packed(data: &[u8]) -> Backend {
-        let mut front = Backend { target: 0, port: 0, count: 0, rev_nat_index: 0, weight: 0 };
+        assert!(data.len() == mem::size_of::<Backend>());
 
-        from_packed_svc(data.as_ptr(), &mut front as *mut _);
-        front
+        let mut back = Backend { target: 0, port: 0, count: 0, rev_nat_index: 0, weight: 0 };
+        ptr::copy_nonoverlapping(data.as_ptr(),
+                                 &mut back as *mut _ as *mut u8,
+                                 mem::size_of::<Backend>());
+
+        back
     }
 }
