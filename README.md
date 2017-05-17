@@ -1,10 +1,9 @@
-# bpf-map
+# cilium-lb-cli
 
-Inspect persisted BPF maps
+Manage load-balanced services.
 
-## Resources
-
-* [bpf-map](https://github.com/cilium/bpf-map), the original Go implementation
+Frontend for managing load-balanced services of the cilium load-balancer.  
+The Cilium load-balancer can be found in [the upstream Cilium repository](https://github.com/cilium/cilium/blob/master/bpf/bpf_lb.c).
 
 ## License
 

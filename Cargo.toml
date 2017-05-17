@@ -2,11 +2,10 @@
 name = "cilium-lb"
 version = "0.1.0"
 authors = ["Jan-Erik Rediger <janerik@fnordig.de>"]
-description = "Inspect persisted BPF maps"
+description = "Manage load-balanced services"
 
-repository = "https://github.com/badboy/bpf-map"
-homepage = "https://github.com/badboy/bpf-map"
-documentation = "https://docs.rs/bpf-map"
+repository = "https://github.com/badboy/cilium-lb-cli"
+homepage = "https://github.com/badboy/cilium-lb-cli"
 
 license = "MIT"
 
