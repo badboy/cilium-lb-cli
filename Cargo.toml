@@ -9,8 +9,6 @@ homepage = "https://github.com/badboy/cilium-lb-cli"
 
 license = "MIT"
 
-build = "build.rs"
-
 include = [
   "README.md",
   "LICENSE",
@@ -27,6 +25,4 @@ name = "cilium-lb"
 [dependencies]
 clap = "2.20.5"
 error-chain = "0.10.0"
-
-[build-dependencies]
-gcc = "0.3"
+libbpf = { git = "https://github.com/badboy/libbpf-rs" }

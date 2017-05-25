@@ -1,15 +1,16 @@
+extern crate libbpf;
 extern crate clap;
 #[macro_use]
 extern crate error_chain;
-extern crate cilium_lb;
 
 use std::io::Write;
 use std::collections::HashMap;
 use std::net::SocketAddrV4;
 use std::str::FromStr;
 use clap::{Arg, ArgMatches, App, AppSettings, SubCommand};
+use libbpf::Map;
 
-use cilium_lb::{bpf, service, Map};
+mod service;
 
 error_chain! {
     foreign_links {
@@ -86,8 +87,7 @@ fn del<'a>(map: Map, args: &ArgMatches<'a>) -> Result<()> {
         frontend.slave(id);
 
         let raw = frontend.to_bytes();
-        let res = bpf::delete_elem(&map, raw);
-        res?;
+        map.delete(raw)?;
     }
 
     Ok(())
@@ -137,8 +137,7 @@ fn add<'a>(map: Map, args: &ArgMatches<'a>) -> Result<()> {
         let raw_fe = frontend.to_bytes();
         let raw_be = empty.to_bytes();
 
-        let res = bpf::update_elem(&map, raw_fe, raw_be);
-        res?;
+        map.insert(raw_fe, raw_be)?;
     }
 
     {
@@ -147,8 +146,7 @@ fn add<'a>(map: Map, args: &ArgMatches<'a>) -> Result<()> {
         let raw_fe = frontend.to_bytes();
         let raw_be = backend.to_bytes();
 
-        let res = bpf::update_elem(&map, raw_fe, raw_be);
-        res?;
+        map.insert(raw_fe, raw_be)?;
     }
 
     Ok(())
