@@ -140,11 +140,12 @@ fn add<'a>(args: &ArgMatches<'a>) -> Result<()> {
     let next_id = frontends.into_iter().max().unwrap_or(0) + 1;
 
     let mut frontend = service::Frontend::new(service_addr);
-    let empty = service::Backend::empty();
+    let mut empty = service::Backend::empty();
     let backend = service::Backend::new(backend_addr, 1);
 
     {
         frontend.slave(0);
+        empty.count(next_id);
         let raw_fe = frontend.to_bytes();
         let raw_be = empty.to_bytes();
 
