@@ -32,8 +32,8 @@ impl Frontend {
             | (octets[3] as u32);
 
         Frontend {
-            address: address,
-            dport: addr.port(),
+            address: address.to_be(),
+            dport: addr.port().to_be(),
             slave: 0,
         }
     }
@@ -43,7 +43,7 @@ impl Frontend {
     }
 
     pub fn addr(&self) -> SocketAddrV4 {
-        SocketAddrV4::new(self.address.into(), self.dport)
+        SocketAddrV4::new(self.address.to_be().into(), self.dport.to_be())
     }
 
     pub fn to_bytes(&self) -> &[u8] {
@@ -76,8 +76,8 @@ impl Backend {
             | (octets[3] as u32);
 
         Backend {
-            target: address,
-            port: addr.port(),
+            target: address.to_be(),
+            port: addr.port().to_be(),
             count: count,
             rev_nat_index: 0,
             weight: 0,
@@ -99,7 +99,7 @@ impl Backend {
     }
 
     pub fn target(&self) -> SocketAddrV4 {
-        SocketAddrV4::new(self.target.into(), self.port)
+        SocketAddrV4::new(self.target.to_be().into(), self.port.to_be())
     }
 
     pub fn to_bytes(&self) -> &[u8] {
