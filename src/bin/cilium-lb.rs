@@ -25,11 +25,7 @@ pub fn report_error(e: Error) {
     }
 }
 
-fn list<'a>(_args: &ArgMatches<'a>) -> Result<()> {
-    let map_path = "/sys/fs/bpf/tc/globals/cilium_lb4_services";
-    let map = Map::from_path(&map_path)
-        .chain_err(|| format!("Failed to parse info about map"))?;
-
+fn list<'a>(map: Map, _args: &ArgMatches<'a>) -> Result<()> {
     let mut lb : HashMap<service::Frontend, Vec<(u16, service::Backend)>> = HashMap::new();
 
     for (key, val) in &map {
@@ -58,11 +54,7 @@ fn list<'a>(_args: &ArgMatches<'a>) -> Result<()> {
     Ok(())
 }
 
-fn del<'a>(args: &ArgMatches<'a>) -> Result<()> {
-    let map_path = "/sys/fs/bpf/tc/globals/cilium_lb4_services";
-    let map = Map::from_path(&map_path)
-        .chain_err(|| format!("Failed to parse info about map"))?;
-
+fn del<'a>(map: Map, args: &ArgMatches<'a>) -> Result<()> {
     let service: String = args.value_of_os("SERVICE")
         .expect("SERVICE is required")
         .to_os_string()
@@ -101,11 +93,7 @@ fn del<'a>(args: &ArgMatches<'a>) -> Result<()> {
     Ok(())
 }
 
-fn add<'a>(args: &ArgMatches<'a>) -> Result<()> {
-    let map_path = "/sys/fs/bpf/tc/globals/cilium_lb4_services";
-    let map = Map::from_path(&map_path)
-        .chain_err(|| format!("Failed to parse info about map"))?;
-
+fn add<'a>(map: Map, args: &ArgMatches<'a>) -> Result<()> {
     let service: String = args.value_of_os("SERVICE")
         .expect("SERVICE is required")
         .to_os_string()
@@ -172,6 +160,12 @@ fn main() {
         .author("Jan-Erik Rediger <janerik@fnordig.de>")
         .about("Manage load-balanced services")
         .settings(&[AppSettings::SubcommandRequired])
+        .arg(Arg::with_name("map")
+             .short("f")
+             .long("file")
+             .value_name("MAP_FILE")
+             .help("Specify path to lb4_services map (default: /sys/fs/bpf/tc/globals/cilium_lb4_services)")
+             .takes_value(true))
         .subcommand(SubCommand::with_name("list")
                     .about("List current services"))
         .subcommand(SubCommand::with_name("add")
@@ -186,11 +180,20 @@ fn main() {
                         .help("Service Identifier (Frontend IP/Port)")));
 
     let args = app.get_matches();
+    let map_path = args.value_of("map").unwrap_or("/sys/fs/bpf/tc/globals/cilium_lb4_services");
+
+    let map = Map::from_path(map_path)
+        .chain_err(|| format!("Failed to parse info about map"))
+        .unwrap_or_else(|err| {
+            report_error(err);
+            std::process::exit(1);
+        });
+
 
     ::std::process::exit(match args.subcommand() {
-        ("list", matches) => list(matches.expect("arguments present")),
-        ("del", matches) => del(matches.expect("arguments present")),
-        ("add", matches) => add(matches.expect("arguments present")),
+        ("list", matches) => list(map, matches.expect("arguments present")),
+        ("del", matches) => del(map, matches.expect("arguments present")),
+        ("add", matches) => add(map, matches.expect("arguments present")),
         (s, _) => panic!("unimplemented subcommand {}!", s),
     }.map(|_| 0).unwrap_or_else(|err| {
         report_error(err);
