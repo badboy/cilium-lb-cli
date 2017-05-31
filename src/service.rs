@@ -25,11 +25,7 @@ impl Frontend {
     pub fn new<A: Into<SocketAddrV4>>(a: A) -> Frontend {
         let addr = a.into();
         let ip = addr.ip();
-        let octets = ip.octets();
-        let address = (octets[0] as u32) << 24
-            | (octets[1] as u32) << 16
-            | (octets[2] as u32) << 8
-            | (octets[3] as u32);
+        let address = u32::from(*ip);
 
         Frontend {
             address: address.to_be(),
@@ -69,11 +65,7 @@ impl Backend {
     pub fn new<A: Into<SocketAddrV4>>(a: A, count: u16) -> Backend {
         let addr = a.into();
         let ip = addr.ip();
-        let octets = ip.octets();
-        let address = (octets[0] as u32) << 24
-            | (octets[1] as u32) << 16
-            | (octets[2] as u32) << 8
-            | (octets[3] as u32);
+        let address = u32::from(*ip);
 
         Backend {
             target: address.to_be(),
